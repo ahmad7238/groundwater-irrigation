@@ -18,7 +18,7 @@ dx = lx / (nx_max - 1)
 dy = ly / (ny_max - 1)
 
 k = 0.001 / 60  # Saturated Hydraulic Conductivity
-s_y = 0.002     # Specific Yield
+s_y = 0.002  # Specific Yield
 
 elapsed_time = 0
 total_time = 86400.1
@@ -71,9 +71,11 @@ while elapsed_time < total_time:
                 hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
 
                 ATDMA[i] = -k * hw * dy / dx
-                BTDMA[i] = (s_y*dx*dy/dt) + (k*he*dy/dx) + (k*hw*dy/dx) + (k*hn*dx/dy) + (k*hs*dx/dy)
+                BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+                           (k * hs * dx / dy)
                 CTDMA[i] = -k * he * dy / dx
-                DTDMA[i] = (s_y*dx*dy/dt)*h_n[i][j]+(k*hs*dx/dy)*h_n1[i][j-1] + (k*hn*dx/dy)*h_n1[i][j+1]
+                DTDMA[i] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
+                           (k * hn * dx / dy) * h_n1[i][j + 1]
 
             # East Boundary Condition
             i = nx_max - 1
@@ -87,7 +89,7 @@ while elapsed_time < total_time:
 
         # I-Sweep + + + + + + + + + + + + + + + +
         for i in range(1, nx_max - 1):
-            # # West Boundary (Drichlet)
+            # # South Boundary (Drichlet)
             # j = 0
             # ATDMA[j] = 0
             # BTDMA[j] = 1
@@ -107,12 +109,12 @@ while elapsed_time < total_time:
                 hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
                 hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
 
-                ATDMA[j] = -k * hw * dy / dx
-                BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + (
-                        k * hs * dx / dy)
-                CTDMA[j] = -k * he * dy / dx
-                DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i - 1][j] + (k * hn * dx /
-                            dy) * h_n1[i + 1][j]
+                ATDMA[j] = -k * hw * dx / dy
+                BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+                           (k * hs * dx / dy)
+                CTDMA[j] = -k * he * dx / dy
+                DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hw * dy / dx) * h_n1[i - 1][j] + \
+                           (k * he * dy / dx) * h_n1[i + 1][j]
 
             # East Boundary Condition
             j = ny_max - 1
@@ -141,6 +143,15 @@ while elapsed_time < total_time:
 
     h_n[:][:] = h_n1[:][:]
     h_n1_old[:][:] = h_n1[:][:]
+
+    # # Graphic
+    # plt.contourf(h_n1)
+    # plt.axis('off')
+    # plt.grid()
+    # plt.colorbar().ax.set_ylabel('[m]')
+    # plt.pause(0.0001)
+    # plt.show(block=False)
+    # plt.clf()
 
 print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
 
