@@ -57,7 +57,7 @@ while elapsed_time < total_time:
 
         # J-Sweep + + + + + + + + + + + + + + + +
         for j in range(1, ny_max - 1):
-            # West Boundary (Drichlet)
+            # West Boundary (Dirichlet)
             i = 0
             ATDMA[i] = 0
             BTDMA[i] = 1
@@ -65,10 +65,10 @@ while elapsed_time < total_time:
             DTDMA[i] = 12
 
             for i in range(1, nx_max - 1):
-                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
-                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
-                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
-                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
+                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
 
                 ATDMA[i] = -k * hw * dy / dx
                 BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
@@ -89,7 +89,7 @@ while elapsed_time < total_time:
 
         # I-Sweep + + + + + + + + + + + + + + + +
         for i in range(1, nx_max - 1):
-            # # South Boundary (Drichlet)
+            # # South Boundary (Dirichlet)
             # j = 0
             # ATDMA[j] = 0
             # BTDMA[j] = 1
@@ -101,27 +101,34 @@ while elapsed_time < total_time:
             ATDMA[j] = 0
             BTDMA[j] = 1
             CTDMA[j] = -1
-            DTDMA[j] = 10
+            DTDMA[j] = 0
 
             for j in range(1, ny_max - 1):
-                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
-                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
-                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
-                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
+                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
 
-                ATDMA[j] = -k * hw * dx / dy
+                ATDMA[j] = -k * hs * dx / dy
                 BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
                            (k * hs * dx / dy)
-                CTDMA[j] = -k * he * dx / dy
+                CTDMA[j] = -k * hn * dx / dy
                 DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hw * dy / dx) * h_n1[i - 1][j] + \
                            (k * he * dy / dx) * h_n1[i + 1][j]
 
-            # East Boundary Condition
+            # # North Boundary(Dirichlet)
+            # j = ny_max - 1
+            # ATDMA[j] = 0
+            # BTDMA[j] = 1
+            # CTDMA[j] = 0
+            # DTDMA[j] = 10
+
+            # North Boundary (no-flow)
             j = ny_max - 1
-            ATDMA[j] = 0
+            ATDMA[j] = -1
             BTDMA[j] = 1
             CTDMA[j] = 0
-            DTDMA[j] = 10
+            DTDMA[j] = 0
 
             h_n1[i][:] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
         # I-Sweep - - - - - - - - - - - - - - - -
