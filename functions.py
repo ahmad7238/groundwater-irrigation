@@ -15,7 +15,7 @@ def TDMAsolver(a, b, c, d):
 
     d[n - 1] = (d[n - 1] - a[n - 1] * d[n - 2]) / (b[n - 1] - a[n - 1] * c[n - 2])
     x[n - 1] = d[n - 1]
-    for i in range(n - 2, 0, -1):
+    for i in range(n - 2, -1, -1):
         x[i] = d[i] - (c[i] * x[i + 1])
     return x
 

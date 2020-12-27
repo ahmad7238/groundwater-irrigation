@@ -17,9 +17,22 @@ ny_max = 51
 dx = lx / (nx_max - 1)
 dy = ly / (ny_max - 1)
 
-k = 0.001 / 60  # Saturated Hydraulic Conductivity
-s_y = 0.002  # Specific Yield
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Dataset 1 --> only recharge (Sensitive to recharge)
+K = 0.001/60         # Saturated Hydraulic Conductivity
+Sy = 0.002           # Specific Yield
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Dataset 2 --> only recharge (Insensitive to recharge)
+# K=0.001/60;       # Saturated Hydraulic Conductivity
+# Sy=0.02;          # Specific Yield
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Dataset 3 --> Pumping
+# K=12/86400;       # Mohamed and Rushton (2006)
+# Sy=0.033;         # Mohamed and Rushton (2006)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ntime = 0
+nn = 0
+nsave = 5
 elapsed_time = 0
 total_time = 86400.1
 dt = 20
@@ -27,6 +40,13 @@ dt = 20
 max_iter = 100
 max_error = 0.0001
 n_iter = np.arange(1, max_iter)
+# Recharge & Pump + + + + + + + + + + + + + + + + + + + + + +
+Recharge=
+
+Pump=np.reshape(np.zeros(nx_max * ny_max), [nx_max, ny_max])
+
+# Recharge & Pump - - - - - - - - - - - - - - - - - - - - - -
+
 
 "Mesh Generation"
 x = np.zeros([nx_max, ny_max])
@@ -57,7 +77,7 @@ while elapsed_time < total_time:
 
         # J-Sweep + + + + + + + + + + + + + + + +
         for j in range(1, ny_max - 1):
-            # West Boundary (Dirichlet)
+            # West Boundary (Drichlet)
             i = 0
             ATDMA[i] = 0
             BTDMA[i] = 1
@@ -65,10 +85,10 @@ while elapsed_time < total_time:
             DTDMA[i] = 12
 
             for i in range(1, nx_max - 1):
-                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
-                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
-                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
-                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
+                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
+                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
+                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
+                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
 
                 ATDMA[i] = -k * hw * dy / dx
                 BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
@@ -89,7 +109,7 @@ while elapsed_time < total_time:
 
         # I-Sweep + + + + + + + + + + + + + + + +
         for i in range(1, nx_max - 1):
-            # # South Boundary (Dirichlet)
+            # # South Boundary (Drichlet)
             # j = 0
             # ATDMA[j] = 0
             # BTDMA[j] = 1
@@ -101,34 +121,27 @@ while elapsed_time < total_time:
             ATDMA[j] = 0
             BTDMA[j] = 1
             CTDMA[j] = -1
-            DTDMA[j] = 0
+            DTDMA[j] = 10
 
             for j in range(1, ny_max - 1):
-                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
-                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
-                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
-                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
+                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
+                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
+                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
+                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
 
-                ATDMA[j] = -k * hs * dx / dy
+                ATDMA[j] = -k * hw * dx / dy
                 BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
                            (k * hs * dx / dy)
-                CTDMA[j] = -k * hn * dx / dy
+                CTDMA[j] = -k * he * dx / dy
                 DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hw * dy / dx) * h_n1[i - 1][j] + \
                            (k * he * dy / dx) * h_n1[i + 1][j]
 
-            # # North Boundary(Dirichlet)
-            # j = ny_max - 1
-            # ATDMA[j] = 0
-            # BTDMA[j] = 1
-            # CTDMA[j] = 0
-            # DTDMA[j] = 10
-
-            # North Boundary (no-flow)
+            # East Boundary Condition
             j = ny_max - 1
-            ATDMA[j] = -1
+            ATDMA[j] = 0
             BTDMA[j] = 1
             CTDMA[j] = 0
-            DTDMA[j] = 0
+            DTDMA[j] = 10
 
             h_n1[i][:] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
         # I-Sweep - - - - - - - - - - - - - - - -
@@ -143,7 +156,7 @@ while elapsed_time < total_time:
         h_n1_old[:][:] = h_n1[:][:]
 
     elapsed_time = elapsed_time + dt
-    print('Elapsed Time =', elapsed_time, ', Iteration= ', n_iter[n])
+    print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
 
     if elapsed_time + dt > total_time:
         dt = total_time - elapsed_time
