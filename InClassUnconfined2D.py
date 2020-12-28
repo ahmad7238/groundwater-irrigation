@@ -46,7 +46,7 @@ CTDMA = np.copy(ATDMA)
 DTDMA = np.copy(ATDMA)
 
 "Initial Condition"
-h_n = np.reshape([10 for i in np.zeros(nx_max * ny_max)], [nx_max, ny_max])
+h_n = np.reshape([float(10) for i in np.zeros(nx_max * ny_max)], [nx_max, ny_max])
 h_n1 = np.copy(h_n)
 h_n1_old = np.copy(h_n)
 
@@ -84,7 +84,9 @@ while elapsed_time < total_time:
             CTDMA[i] = 0
             DTDMA[i] = 10
 
-            h_n1[:][j] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            for k in range(1, ny_max):
+                h_n1[k][j] = z[k - 1]
         # J-Sweep - - - - - - - - - - - - - - - -
 
         # I-Sweep + + + + + + + + + + + + + + + +
@@ -130,7 +132,9 @@ while elapsed_time < total_time:
             CTDMA[j] = 0
             DTDMA[j] = 0
 
-            h_n1[i][:] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            for k in range(1, ny_max):
+                h_n1[k][j] = z[k - 1]
         # I-Sweep - - - - - - - - - - - - - - - -
 
         for i in range(nx_max):
@@ -140,7 +144,7 @@ while elapsed_time < total_time:
         if h_diff < max_error:
             break
 
-        h_n1_old[:][:] = h_n1[:][:]
+        h_n1_old = h_n1
 
     elapsed_time = elapsed_time + dt
     print('Elapsed Time =', elapsed_time, ', Iteration= ', n_iter[n])
@@ -148,17 +152,17 @@ while elapsed_time < total_time:
     if elapsed_time + dt > total_time:
         dt = total_time - elapsed_time
 
-    h_n[:][:] = h_n1[:][:]
-    h_n1_old[:][:] = h_n1[:][:]
+    h_n = h_n1
+    h_n1_old = h_n1
 
-    # # Graphic
-    # plt.contourf(h_n1)
-    # plt.axis('off')
-    # plt.grid()
-    # plt.colorbar().ax.set_ylabel('[m]')
-    # plt.pause(0.0001)
-    # plt.show(block=False)
-    # plt.clf()
+    # Graphic
+    plt.contourf(h_n1)
+    plt.axis('off')
+    plt.grid()
+    plt.colorbar().ax.set_ylabel('[m]')
+    plt.pause(0.0001)
+    plt.show(block=False)
+    plt.clf()
 
 print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
 

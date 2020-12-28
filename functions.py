@@ -1,5 +1,5 @@
-
 import numpy as np
+
 
 def TDMAsolver(a, b, c, d):
     n = len(b)
@@ -45,6 +45,7 @@ def Cw(psi, thetas, thetar, alfa, n_v):
         cw = 0
     return cw
 
+
 def a_trap(b, ss, h):
     area = h * (b + h * ss)
     return area
@@ -63,4 +64,3 @@ def t_trap(b, ss, h):
 def k_l(h_c, t, alph, f, w):
     infiltration = (h_c * (t ** alph) + f * t) / w
     return infiltration
-
