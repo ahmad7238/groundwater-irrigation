@@ -85,8 +85,8 @@ while elapsed_time < total_time:
             DTDMA[i] = 10
 
             z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
-            for k in range(1, ny_max):
-                h_n1[k][j] = z[k - 1]
+            for l in range(ny_max):
+                h_n1[l][j] = z[l]
         # J-Sweep - - - - - - - - - - - - - - - -
 
         # I-Sweep + + + + + + + + + + + + + + + +
@@ -133,8 +133,8 @@ while elapsed_time < total_time:
             DTDMA[j] = 0
 
             z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
-            for k in range(1, ny_max):
-                h_n1[k][j] = z[k - 1]
+            for l in range(nx_max):
+                h_n1[i][l] = z[l]
         # I-Sweep - - - - - - - - - - - - - - - -
 
         for i in range(nx_max):
@@ -156,7 +156,7 @@ while elapsed_time < total_time:
     h_n1_old = h_n1
 
     # Graphic
-    plt.contourf(h_n1)
+    plt.contourf(x, y, h_n1)
     plt.axis('off')
     plt.grid()
     plt.colorbar().ax.set_ylabel('[m]')
