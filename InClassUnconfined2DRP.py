@@ -17,22 +17,26 @@ ny_max = 51
 dx = lx / (nx_max - 1)
 dy = ly / (ny_max - 1)
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Dataset 1 --> only recharge (Sensitive to recharge)
-K = 0.001/60         # Saturated Hydraulic Conductivity
-Sy = 0.002           # Specific Yield
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Dataset 2 --> only recharge (Insensitive to recharge)
-# K=0.001/60;       # Saturated Hydraulic Conductivity
-# Sy=0.02;          # Specific Yield
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+k = 0.001 / 60  # Saturated Hydraulic Conductivity
+s_y = 0.002  # Specific Yield
+
+"- - - - - - - - - - - - - - - - - - - - - - - - "
+# Dataset 1 --> only recharge (sensitive to recharge)
+k = 0.002/60
+s_y = 0.002
+
+# Dataset 2 --> only recharge (insensitive to recharge)
+# k = 0.001/60    # Saturated Hydraulic Conductivity
+# s_y = 0.02
+
 # Dataset 3 --> Pumping
-# K=12/86400;       # Mohamed and Rushton (2006)
-# Sy=0.033;         # Mohamed and Rushton (2006)
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-ntime = 0
+# k = 12/86400    # Mohamed and Rushton (2006)
+# s_y = 0.033     # Mohamed and Rushton (2006)
+"- - - - - - - - - - - - - - - - - - - - - - - - "
+n_time = 0
 nn = 0
-nsave = 5
+n_save = 2
+
 elapsed_time = 0
 total_time = 86400.1
 dt = 20
@@ -40,13 +44,15 @@ dt = 20
 max_iter = 100
 max_error = 0.0001
 n_iter = np.arange(1, max_iter)
-# Recharge & Pump + + + + + + + + + + + + + + + + + + + + + +
-Recharge=
 
-Pump=np.reshape(np.zeros(nx_max * ny_max), [nx_max, ny_max])
+"Recharge & Pump + + + + + + + + + + + + + + + +"
+recharge = xlrd()
 
-# Recharge & Pump - - - - - - - - - - - - - - - - - - - - - -
+pump = np.reshape(np.zeros(nx_max*ny_max), [nx_max, ny_max])
+pump[40][25] = 1
+q_p1 =
 
+"Recharge & Pump - - - - - - - - - - - - - - - -"
 
 "Mesh Generation"
 x = np.zeros([nx_max, ny_max])
@@ -66,7 +72,7 @@ CTDMA = np.copy(ATDMA)
 DTDMA = np.copy(ATDMA)
 
 "Initial Condition"
-h_n = np.reshape([10 for i in np.zeros(nx_max * ny_max)], [nx_max, ny_max])
+h_n = np.reshape([float(10) for i in np.zeros(nx_max * ny_max)], [nx_max, ny_max])
 h_n1 = np.copy(h_n)
 h_n1_old = np.copy(h_n)
 
@@ -77,7 +83,7 @@ while elapsed_time < total_time:
 
         # J-Sweep + + + + + + + + + + + + + + + +
         for j in range(1, ny_max - 1):
-            # West Boundary (Drichlet)
+            # West Boundary (Dirichlet)
             i = 0
             ATDMA[i] = 0
             BTDMA[i] = 1
@@ -85,10 +91,10 @@ while elapsed_time < total_time:
             DTDMA[i] = 12
 
             for i in range(1, nx_max - 1):
-                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
-                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
-                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
-                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
+                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
 
                 ATDMA[i] = -k * hw * dy / dx
                 BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
@@ -104,12 +110,14 @@ while elapsed_time < total_time:
             CTDMA[i] = 0
             DTDMA[i] = 10
 
-            h_n1[:][j] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            for l in range(ny_max):
+                h_n1[l][j] = z[l]
         # J-Sweep - - - - - - - - - - - - - - - -
 
         # I-Sweep + + + + + + + + + + + + + + + +
         for i in range(1, nx_max - 1):
-            # # South Boundary (Drichlet)
+            # # South Boundary (Dirichlet)
             # j = 0
             # ATDMA[j] = 0
             # BTDMA[j] = 1
@@ -121,29 +129,38 @@ while elapsed_time < total_time:
             ATDMA[j] = 0
             BTDMA[j] = 1
             CTDMA[j] = -1
-            DTDMA[j] = 10
+            DTDMA[j] = 0
 
             for j in range(1, ny_max - 1):
-                hw = 0.5 * h_n1[i - 1][j] + h_n1[i][j]
-                he = 0.5 * h_n1[i + 1][j] + h_n1[i][j]
-                hs = 0.5 * h_n1[i][j - 1] + h_n1[i][j]
-                hn = 0.5 * h_n1[i][j + 1] + h_n1[i][j]
+                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
 
-                ATDMA[j] = -k * hw * dx / dy
+                ATDMA[j] = -k * hs * dx / dy
                 BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
                            (k * hs * dx / dy)
-                CTDMA[j] = -k * he * dx / dy
+                CTDMA[j] = -k * hn * dx / dy
                 DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hw * dy / dx) * h_n1[i - 1][j] + \
                            (k * he * dy / dx) * h_n1[i + 1][j]
 
-            # East Boundary Condition
+            # # North Boundary(Dirichlet)
+            # j = ny_max - 1
+            # ATDMA[j] = 0
+            # BTDMA[j] = 1
+            # CTDMA[j] = 0
+            # DTDMA[j] = 10
+
+            # North Boundary (no-flow)
             j = ny_max - 1
-            ATDMA[j] = 0
+            ATDMA[j] = -1
             BTDMA[j] = 1
             CTDMA[j] = 0
-            DTDMA[j] = 10
+            DTDMA[j] = 0
 
-            h_n1[i][:] = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+            for l in range(nx_max):
+                h_n1[i][l] = z[l]
         # I-Sweep - - - - - - - - - - - - - - - -
 
         for i in range(nx_max):
@@ -153,25 +170,25 @@ while elapsed_time < total_time:
         if h_diff < max_error:
             break
 
-        h_n1_old[:][:] = h_n1[:][:]
+        h_n1_old = h_n1
 
     elapsed_time = elapsed_time + dt
-    print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
+    print('Elapsed Time =', elapsed_time, ', Iteration= ', n_iter[n])
 
     if elapsed_time + dt > total_time:
         dt = total_time - elapsed_time
 
-    h_n[:][:] = h_n1[:][:]
-    h_n1_old[:][:] = h_n1[:][:]
+    h_n = h_n1
+    h_n1_old = h_n1
 
-    # # Graphic
-    # plt.contourf(h_n1)
-    # plt.axis('off')
-    # plt.grid()
-    # plt.colorbar().ax.set_ylabel('[m]')
-    # plt.pause(0.0001)
-    # plt.show(block=False)
-    # plt.clf()
+    # Graphic
+    plt.contourf(x, y, h_n1)
+    plt.axis('off')
+    plt.grid()
+    plt.colorbar().ax.set_ylabel('[m]')
+    plt.pause(0.0001)
+    plt.show(block=False)
+    plt.clf()
 
 print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
 
