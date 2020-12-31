@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from functions import TDMAsolver
+from openpyxl import *
+import pandas as pd
+import xlrd
 
 t0 = time.time()
 
@@ -21,17 +24,17 @@ k = 0.001 / 60  # Saturated Hydraulic Conductivity
 s_y = 0.002  # Specific Yield
 
 "- - - - - - - - - - - - - - - - - - - - - - - - "
-# Dataset 1 --> only recharge (sensitive to recharge)
-k = 0.002/60
-s_y = 0.002
+# # Dataset 1 --> only recharge (sensitive to recharge)
+# k = 0.002 / 60
+# s_y = 0.002
 
-# Dataset 2 --> only recharge (insensitive to recharge)
+# # Dataset 2 --> only recharge (insensitive to recharge)
 # k = 0.001/60    # Saturated Hydraulic Conductivity
 # s_y = 0.02
 
 # Dataset 3 --> Pumping
-# k = 12/86400    # Mohamed and Rushton (2006)
-# s_y = 0.033     # Mohamed and Rushton (2006)
+k = 12/86400    # Mohamed and Rushton (2006)
+s_y = 0.033     # Mohamed and Rushton (2006)
 "- - - - - - - - - - - - - - - - - - - - - - - - "
 n_time = 0
 nn = 0
@@ -46,11 +49,23 @@ max_error = 0.0001
 n_iter = np.arange(1, max_iter)
 
 "Recharge & Pump + + + + + + + + + + + + + + + +"
-recharge = xlrd()
+R_data_workbook = xlrd.open_workbook('RData.xlsx')
+R_data_sheet = R_data_workbook.sheet_by_index(0)
+recharge = np.zeros([R_data_sheet.nrows - 2, 1])
+m = 0
+for i in range(2, R_data_sheet.nrows):
+    recharge[m] = float(R_data_sheet.cell_value(i, 2))
+    m += 1
 
-pump = np.reshape(np.zeros(nx_max*ny_max), [nx_max, ny_max])
+pump = np.zeros([nx_max, ny_max])
 pump[40][25] = 1
-q_p1 =
+P_data_workbook = xlrd.open_workbook('PData.xlsx')
+P_data_sheet = P_data_workbook.sheet_by_index(0)
+q_p1 = np.zeros([P_data_sheet.nrows - 2, 1])
+m = 0
+for i in range(2, P_data_sheet.nrows):
+    q_p1[m] = float(P_data_sheet.cell_value(i, 2))
+    m += 1
 
 "Recharge & Pump - - - - - - - - - - - - - - - -"
 
@@ -101,7 +116,9 @@ while elapsed_time < total_time:
                            (k * hs * dx / dy)
                 CTDMA[i] = -k * he * dy / dx
                 DTDMA[i] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
-                           (k * hn * dx / dy) * h_n1[i][j + 1]
+                           (k * hn * dx / dy) * h_n1[i][j + 1] +\
+                           recharge[int(np.floor(elapsed_time / 86400))] * dx * dy -\
+                           pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
 
             # East Boundary Condition
             i = nx_max - 1
@@ -141,8 +158,10 @@ while elapsed_time < total_time:
                 BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
                            (k * hs * dx / dy)
                 CTDMA[j] = -k * hn * dx / dy
-                DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hw * dy / dx) * h_n1[i - 1][j] + \
-                           (k * he * dy / dx) * h_n1[i + 1][j]
+                DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
+                           (k * hn * dx / dy) * h_n1[i][j + 1] + \
+                           recharge[int(np.floor(elapsed_time / 86400))] * dx * dy - \
+                           pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
 
             # # North Boundary(Dirichlet)
             # j = ny_max - 1
@@ -173,7 +192,7 @@ while elapsed_time < total_time:
         h_n1_old = h_n1
 
     elapsed_time = elapsed_time + dt
-    print('Elapsed Time =', elapsed_time, ', Iteration= ', n_iter[n])
+    print('Elapsed Time =', ('%0.2f' % (elapsed_time/86400)), ', Iteration= ', n_iter[n])
 
     if elapsed_time + dt > total_time:
         dt = total_time - elapsed_time
@@ -186,11 +205,11 @@ while elapsed_time < total_time:
     plt.axis('off')
     plt.grid()
     plt.colorbar().ax.set_ylabel('[m]')
-    plt.pause(0.0001)
+    plt.pause(0.00000001)
     plt.show(block=False)
     plt.clf()
 
-print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
+print('Elapsed Time= ', ('%0.2f' % (elapsed_time/86400)), ', Iteration= ', n_iter[n])
 
 t1 = time.time()
 print('time required: ', (t1 - t0) / 60)
