@@ -28,13 +28,13 @@ s_y = 0.002  # Specific Yield
 # k = 0.002 / 60
 # s_y = 0.002
 
-# # Dataset 2 --> only recharge (insensitive to recharge)
-# k = 0.001/60    # Saturated Hydraulic Conductivity
-# s_y = 0.02
+# Dataset 2 --> only recharge (insensitive to recharge)
+k = 0.001/60    # Saturated Hydraulic Conductivity
+s_y = 0.02
 
-# Dataset 3 --> Pumping
-k = 12/86400    # Mohamed and Rushton (2006)
-s_y = 0.033     # Mohamed and Rushton (2006)
+# # Dataset 3 --> Pumping
+# k = 12/86400    # Mohamed and Rushton (2006)
+# s_y = 0.033     # Mohamed and Rushton (2006)
 "- - - - - - - - - - - - - - - - - - - - - - - - "
 n_time = 0
 nn = 0
@@ -58,7 +58,7 @@ for i in range(2, R_data_sheet.nrows):
     m += 1
 
 pump = np.zeros([nx_max, ny_max])
-pump[40][25] = 1
+# pump[40][25] = 1
 P_data_workbook = xlrd.open_workbook('PData.xlsx')
 P_data_sheet = P_data_workbook.sheet_by_index(0)
 q_p1 = np.zeros([P_data_sheet.nrows - 2, 1])
@@ -192,7 +192,7 @@ while elapsed_time < total_time:
         h_n1_old = h_n1
 
     elapsed_time = elapsed_time + dt
-    print('Elapsed Time =', ('%0.2f' % (elapsed_time/86400)), ', Iteration= ', n_iter[n])
+    print('Elapsed Time =', (elapsed_time/86400), ', Iteration= ', n_iter[n])
 
     if elapsed_time + dt > total_time:
         dt = total_time - elapsed_time
@@ -209,7 +209,7 @@ while elapsed_time < total_time:
     plt.show(block=False)
     plt.clf()
 
-print('Elapsed Time= ', ('%0.2f' % (elapsed_time/86400)), ', Iteration= ', n_iter[n])
+print('Elapsed Time= ', (elapsed_time/86400), ', Iteration= ', n_iter[n])
 
 t1 = time.time()
 print('time required: ', (t1 - t0) / 60)
