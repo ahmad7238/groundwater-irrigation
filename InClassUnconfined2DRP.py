@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from functions import TDMAsolver
-from openpyxl import *
-import pandas as pd
 import xlrd
 
 t0 = time.time()
