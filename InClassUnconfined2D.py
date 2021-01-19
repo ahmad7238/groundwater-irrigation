@@ -155,14 +155,14 @@ while elapsed_time < total_time:
     h_n = h_n1
     h_n1_old = h_n1
 
-    # Graphic
-    plt.contourf(x, y, h_n1)
-    plt.axis('off')
-    plt.grid()
-    plt.colorbar().ax.set_ylabel('[m]')
-    plt.pause(0.0001)
-    plt.show(block=False)
-    plt.clf()
+    # # Graphic
+    # plt.contourf(x, y, h_n1)
+    # plt.axis('off')
+    # plt.grid()
+    # plt.colorbar().ax.set_ylabel('[m]')
+    # plt.pause(0.0001)
+    # plt.show(block=False)
+    # plt.clf()
 
 print('Elapsed Time= ', elapsed_time, ', Iteration= ', n_iter[n])
 
