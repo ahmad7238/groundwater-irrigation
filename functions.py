@@ -8,13 +8,17 @@ def TDMAsolver(a, b, c, d):
     # Modify the first-row coefficient
     c[0] = c[0] / b[0]  # Division by zero risk
     d[0] = d[0] / b[0]  # Division by zero would imply a singular matrix
-    for i in range(1, n - 1):
-        temp = b[i] - a[i] * c[i - 1]
-        c[i] = c[i] / temp
-        d[i] = (d[i] - a[i] * d[i - 1]) / temp
+    temp = b[1:] - a[1:] * c[:-1]
+    c[1:] = c[1:] / temp
+    d[1:] = (d[1:] - a[1:] * d[:-1]) / temp
+    # for i in range(1, n - 1):
+    #     temp = b[i] - a[i] * c[i - 1]
+    #     c[i] = c[i] / temp
+    #     d[i] = (d[i] - a[i] * d[i - 1]) / temp
 
     d[n - 1] = (d[n - 1] - a[n - 1] * d[n - 2]) / (b[n - 1] - a[n - 1] * c[n - 2])
     x[n - 1] = d[n - 1]
+    x[-1:] = d[-1:] - (c[-1:])*x[:-1]
     for i in range(n - 2, -1, -1):
         x[i] = d[i] - (c[i] * x[i + 1])
     return x
