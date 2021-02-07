@@ -96,13 +96,33 @@ while elapsed_time < total_time:
     for n in n_iter:
         h_diff = 0
 
-        # J-Sweep + + + + + + + + + + + + + + + +
-        # for j in range(1, ny_max - 1):
-            # West Boundary (Dirichlet)
         ATDMA[0] = 0
         BTDMA[0] = 1
         CTDMA[0] = 0
         DTDMA[0] = 12
+
+        hw = 0.5 * (h_n1[:-1][1:] + h_n1[1:][1:])
+        he = 0.5 * (h_n1[1:][1:] + h_n1[:-1][1:])
+        hs = 0.5 * (h_n1[1:][:-1] + h_n1[1:][1:])
+        hn = 0.5 * (h_n1[1:][1:] + h_n1[1:][:-1])
+
+        ATDMA = -k * hw * dy / dx
+        BTDMA = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+                (k * hs * dx / dy)
+        CTDMA = -k * he * dy / dx
+        DTDMA = (s_y * dx * dy / dt) * h_n[1:-1][:] + (k * hs * dx / dy) * h_n1[1:-1][:] + \
+                (k * hn * dx / dy) * h_n1[1:-1][:] + \
+                recharge[int(np.floor(elapsed_time / 86400))] * dx * dy - \
+                pump[1:-1][:] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
+
+        ATDMA[-1] = 0
+        BTDMA[-1] = 1
+        CTDMA[-1] = 0
+        DTDMA[-1] = 10
+        # J-Sweep + + + + + + + + + + + + + + + +
+        # for j in range(1, ny_max - 1):
+            # West Boundary (Dirichlet)
+
             # i = 0
             # ATDMA[i] = 0
             # BTDMA[i] = 1
@@ -110,23 +130,13 @@ while elapsed_time < total_time:
             # DTDMA[i] = 12
 
         """without loop"""
-        hw = 0.5 * (h_n1[:-1][1:] + h_n1[1:][1:])
-        he = 0.5 * (h_n1[1:][1:] + h_n1[:-1][1:])
-        hs = 0.5 * (h_n1[1:][:-1] + h_n1[1:][1:])
-        hn = 0.5 * (h_n1[1:][1:] + h_n1[1:][:-1])
+
             # for i in range(1, nx_max - 1):
             #     hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
             #     he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
             #     hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
             #     hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
-        ATDMA = -k * hw * dy / dx
-        BTDMA = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
-                (k * hs * dx / dy)
-        CTDMA = -k * he * dy / dx
-        DTDMA = (s_y * dx * dy / dt) * h_n + (k * hs * dx / dy) * h_n1[:][:-1] + \
-                (k * hn * dx / dy) * h_n1 +\
-                recharge[int(np.floor(elapsed_time / 86400))] * dx * dy -\
-                pump[:][:] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
+
 
             # ATDMA[i] = -k * hw * dy / dx
             # BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
@@ -138,10 +148,7 @@ while elapsed_time < total_time:
             #            pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
 
             # East Boundary Condition
-        ATDMA[-1] = 0
-        BTDMA[-1] = 1
-        CTDMA[-1] = 0
-        DTDMA[-1] = 10
+
             # i = nx_max - 1
             # ATDMA[i] = 0
             # BTDMA[i] = 1
@@ -154,53 +161,53 @@ while elapsed_time < total_time:
         # J-Sweep - - - - - - - - - - - - - - - -
 
         # I-Sweep + + + + + + + + + + + + + + + +
-        for i in range(1, nx_max - 1):
-            # # South Boundary (Dirichlet)
-            # j = 0
-            # ATDMA[j] = 0
-            # BTDMA[j] = 1
-            # CTDMA[j] = -1
-            # DTDMA[j] = 10
-
-            # South Boundary (no flow)
-            j = 0
-            ATDMA[j] = 0
-            BTDMA[j] = 1
-            CTDMA[j] = -1
-            DTDMA[j] = 0
-
-            for j in range(1, ny_max - 1):
-                hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
-                he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
-                hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
-                hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
-
-                ATDMA[j] = -k * hs * dx / dy
-                BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
-                           (k * hs * dx / dy)
-                CTDMA[j] = -k * hn * dx / dy
-                DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
-                           (k * hn * dx / dy) * h_n1[i][j + 1] + \
-                           recharge[int(np.floor(elapsed_time / 86400))] * dx * dy - \
-                           pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
-
-            # # North Boundary(Dirichlet)
-            # j = ny_max - 1
-            # ATDMA[j] = 0
-            # BTDMA[j] = 1
-            # CTDMA[j] = 0
-            # DTDMA[j] = 10
-
-            # North Boundary (no-flow)
-            j = ny_max - 1
-            ATDMA[j] = -1
-            BTDMA[j] = 1
-            CTDMA[j] = 0
-            DTDMA[j] = 0
-
-            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
-            for l in range(nx_max):
-                h_n1[i][l] = z[l]
+        # for i in range(1, nx_max - 1):
+        #     # # South Boundary (Dirichlet)
+        #     # j = 0
+        #     # ATDMA[j] = 0
+        #     # BTDMA[j] = 1
+        #     # CTDMA[j] = -1
+        #     # DTDMA[j] = 10
+        #
+        #     # South Boundary (no flow)
+        #     j = 0
+        #     ATDMA[j] = 0
+        #     BTDMA[j] = 1
+        #     CTDMA[j] = -1
+        #     DTDMA[j] = 0
+        #
+        #     for j in range(1, ny_max - 1):
+        #         hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+        #         he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+        #         hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+        #         hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
+        #
+        #         ATDMA[j] = -k * hs * dx / dy
+        #         BTDMA[j] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+        #                    (k * hs * dx / dy)
+        #         CTDMA[j] = -k * hn * dx / dy
+        #         DTDMA[j] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
+        #                    (k * hn * dx / dy) * h_n1[i][j + 1] + \
+        #                    recharge[int(np.floor(elapsed_time / 86400))] * dx * dy - \
+        #                    pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
+        #
+        #     # # North Boundary(Dirichlet)
+        #     # j = ny_max - 1
+        #     # ATDMA[j] = 0
+        #     # BTDMA[j] = 1
+        #     # CTDMA[j] = 0
+        #     # DTDMA[j] = 10
+        #
+        #     # North Boundary (no-flow)
+        #     j = ny_max - 1
+        #     ATDMA[j] = -1
+        #     BTDMA[j] = 1
+        #     CTDMA[j] = 0
+        #     DTDMA[j] = 0
+        #
+        #     z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+        #     for l in range(nx_max):
+        #         h_n1[i][l] = z[l]
         # I-Sweep - - - - - - - - - - - - - - - -
 
         for i in range(nx_max):

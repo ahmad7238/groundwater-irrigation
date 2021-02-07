@@ -2,8 +2,8 @@ import numpy as np
 
 
 def TDMAsolver(a, b, c, d):
-    n = len(b)
-    x = np.zeros(n)
+    n = list(np.shape(d))
+    x = np.zeros([n[0], n[1]])
 
     # Modify the first-row coefficient
     c[0] = c[0] / b[0]  # Division by zero risk
@@ -12,8 +12,8 @@ def TDMAsolver(a, b, c, d):
     c[1:] = c[1:] / temp
     d[1:] = (d[1:] - a[1:] * d[:-1]) / temp
 
-    d[n - 1] = (d[n - 1] - a[n - 1] * d[n - 2]) / (b[n - 1] - a[n - 1] * c[n - 2])
-    x[n - 1] = d[n - 1]
+    d[-1] = (d[-1] - a[-1] * d[-2]) / (b[-1] - a[-1] * c[-2])
+    x[-1] = d[-1]
     x[:0:-1] = d[:0:-1] - (c[:0:-1] * x[:1])
     return x
 
