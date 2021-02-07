@@ -97,44 +97,60 @@ while elapsed_time < total_time:
         h_diff = 0
 
         # J-Sweep + + + + + + + + + + + + + + + +
-        for j in range(1, ny_max - 1):
+        # for j in range(1, ny_max - 1):
             # West Boundary (Dirichlet)
-            i = 0
-            ATDMA[i] = 0
-            BTDMA[i] = 1
-            CTDMA[i] = 0
-            DTDMA[i] = 12
+        ATDMA[0] = 0
+        BTDMA[0] = 1
+        CTDMA[0] = 0
+        DTDMA[0] = 12
+            # i = 0
+            # ATDMA[i] = 0
+            # BTDMA[i] = 1
+            # CTDMA[i] = 0
+            # DTDMA[i] = 12
 
-            """without loop"""
-            hw = 0.5 * (h_n1[:-1][1:] + h_n1[1:][1:])
-            he = 0.5 * (h_n1[2:][1:] + h_n1[1:-1][1:])
-            hs = 0.5 * (h_n1[1:][:-1] + h_n1[1:][1:])
-            hn = 0.5 * (h_n1[1:][2:] + h_n1[1:][1:-1])
-            ATDMA[1:][1:] = -k * hw[1:][1:] * dy / dx
-            for i in range(1, nx_max - 1):
-                # hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
-                # he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
-                # hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
-                # hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
+        """without loop"""
+        hw = 0.5 * (h_n1[:-1][1:] + h_n1[1:][1:])
+        he = 0.5 * (h_n1[1:][1:] + h_n1[:-1][1:])
+        hs = 0.5 * (h_n1[1:][:-1] + h_n1[1:][1:])
+        hn = 0.5 * (h_n1[1:][1:] + h_n1[1:][:-1])
+            # for i in range(1, nx_max - 1):
+            #     hw = 0.5 * (h_n1[i - 1][j] + h_n1[i][j])
+            #     he = 0.5 * (h_n1[i + 1][j] + h_n1[i][j])
+            #     hs = 0.5 * (h_n1[i][j - 1] + h_n1[i][j])
+            #     hn = 0.5 * (h_n1[i][j + 1] + h_n1[i][j])
+        ATDMA = -k * hw * dy / dx
+        BTDMA = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+                (k * hs * dx / dy)
+        CTDMA = -k * he * dy / dx
+        DTDMA = (s_y * dx * dy / dt) * h_n + (k * hs * dx / dy) * h_n1[:][:-1] + \
+                (k * hn * dx / dy) * h_n1 +\
+                recharge[int(np.floor(elapsed_time / 86400))] * dx * dy -\
+                pump[:][:] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
 
-                ATDMA[i] = -k * hw * dy / dx
-                BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
-                           (k * hs * dx / dy)
-                CTDMA[i] = -k * he * dy / dx
-                DTDMA[i] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
-                           (k * hn * dx / dy) * h_n1[i][j + 1] +\
-                           recharge[int(np.floor(elapsed_time / 86400))] * dx * dy -\
-                           pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
+            # ATDMA[i] = -k * hw * dy / dx
+            # BTDMA[i] = (s_y * dx * dy / dt) + (k * he * dy / dx) + (k * hw * dy / dx) + (k * hn * dx / dy) + \
+            #            (k * hs * dx / dy)
+            # CTDMA[i] = -k * he * dy / dx
+            # DTDMA[i] = (s_y * dx * dy / dt) * h_n[i][j] + (k * hs * dx / dy) * h_n1[i][j - 1] + \
+            #            (k * hn * dx / dy) * h_n1[i][j + 1] +\
+            #            recharge[int(np.floor(elapsed_time / 86400))] * dx * dy -\
+            #            pump[i][j] * q_p1[int(np.floor(elapsed_time / 3600) + 1)]
 
             # East Boundary Condition
-            i = nx_max - 1
-            ATDMA[i] = 0
-            BTDMA[i] = 1
-            CTDMA[i] = 0
-            DTDMA[i] = 10
-            z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
-            for l in range(ny_max):
-                h_n1[l][j] = z[l]
+        ATDMA[-1] = 0
+        BTDMA[-1] = 1
+        CTDMA[-1] = 0
+        DTDMA[-1] = 10
+            # i = nx_max - 1
+            # ATDMA[i] = 0
+            # BTDMA[i] = 1
+            # CTDMA[i] = 0
+            # DTDMA[i] = 10
+        z = TDMAsolver(ATDMA, BTDMA, CTDMA, DTDMA)
+        h_n1 = z
+            # for l in range(ny_max):
+            #     h_n1[l][j] = z[l]
         # J-Sweep - - - - - - - - - - - - - - - -
 
         # I-Sweep + + + + + + + + + + + + + + + +
